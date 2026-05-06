@@ -74,8 +74,8 @@ class AIVideoService:
         """
         if not prompt or not prompt.strip():
             raise ValueError("Prompt tidak boleh kosong")
-        if duration < 1 or duration > 30:
-            raise ValueError("Duration harus antara 1-30 detik")
+        if duration < 1 or duration > 12:
+            raise ValueError("Duration harus antara 1-12 detik (max 12s untuk kualitas audio native)")
         if ratio not in ("16:9", "9:16", "1:1", "4:3"):
             raise ValueError(f"Ratio '{ratio}' tidak valid")
 

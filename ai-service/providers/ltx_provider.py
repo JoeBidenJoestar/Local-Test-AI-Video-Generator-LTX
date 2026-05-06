@@ -6,6 +6,11 @@ CATATAN AUDIO:
 - ltx-2-3-fast, ltx-2-3-pro : SUPPORT audio native (model baru, recommended)
 
 Gunakan ltx-2-3-pro atau ltx-2-3-fast untuk video dengan audio.
+
+FIX AUDIO CUTOFF:
+- Payload WAJIB menyertakan 'audio_length' yang sama nilainya dengan 'duration'
+- Tanpa audio_length, LTX akan memotong audio lebih awal dari durasi video
+- Max duration dibatasi 12 detik untuk menjaga kualitas audio native
 """
 
 from __future__ import annotations
@@ -26,11 +31,14 @@ logger = logging.getLogger(__name__)
 LTX_BASE_URL = "https://api.ltx.video/v1"
 
 SUPPORTED_MODELS = {
-    "ltx-2-fast":  {"max_duration": 10, "max_fps": 30, "audio_native": True},
-    "ltx-2-pro":   {"max_duration": 30, "max_fps": 30, "audio_native": True},
-    "ltx-2-3-fast":{"max_duration": 10, "max_fps": 30, "audio_native": True},
-    "ltx-2-3-pro": {"max_duration": 30, "max_fps": 30, "audio_native": True},
+    "ltx-2-fast":  {"max_duration": 12, "max_fps": 30, "audio_native": False},
+    "ltx-2-pro":   {"max_duration": 12, "max_fps": 30, "audio_native": False},
+    "ltx-2-3-fast":{"max_duration": 12, "max_fps": 30, "audio_native": True},
+    "ltx-2-3-pro": {"max_duration": 12, "max_fps": 30, "audio_native": True},
 }
+
+# Durasi maksimum global — batas atas untuk semua model
+MAX_DURATION_GLOBAL = 12
 
 RATIO_MAP = {
     "16:9":  "1920x1080",
@@ -166,6 +174,11 @@ class LTXProvider(VideoProvider):
 
         Mengambil nilai dari constraints, bukan dari flat attribute,
         sesuai structured format yang ditentukan.
+
+        FIX AUDIO CUTOFF:
+        'audio_length' HARUS sama dengan 'duration' agar audio tidak terpotong.
+        LTX API menggunakan audio_length secara terpisah untuk menentukan panjang
+        audio yang di-generate; tanpa ini audio akan dipotong lebih awal.
         """
         constraints = request.constraints
 
@@ -178,10 +191,15 @@ class LTXProvider(VideoProvider):
 
         # Klip duration ke batas model
         model_info = SUPPORTED_MODELS.get(self._model, {})
-        max_dur = model_info.get("max_duration", 30)
+        max_dur = model_info.get("max_duration", MAX_DURATION_GLOBAL)
         if duration > max_dur:
-            logger.warning("[LTX] duration=%d melebihi max=%d, di-clamp.", duration, max_dur)
+            logger.warning("[LTX] duration=%d melebihi max=%d, di-clamp ke %d.", duration, max_dur, max_dur)
             duration = max_dur
+
+        # Pastikan tidak melebihi batas global
+        if duration > MAX_DURATION_GLOBAL:
+            logger.warning("[LTX] duration=%d melebihi MAX_DURATION_GLOBAL=%d, di-clamp.", duration, MAX_DURATION_GLOBAL)
+            duration = MAX_DURATION_GLOBAL
 
         payload: Dict[str, Any] = {
             "prompt": request.input,
@@ -189,7 +207,10 @@ class LTXProvider(VideoProvider):
             "duration": duration,
             "resolution": resolution,
             "fps": fps,
-            "generate_audio": True,
+            "generate_audio": self._generate_audio,
+            # FIX AUDIO CUTOFF: audio_length HARUS sama dengan duration
+            # Tanpa parameter ini, LTX memotong audio sebelum video selesai
+            "audio_length": duration,
         }
 
         # Tambahkan context jika ada metadata relevan
@@ -199,5 +220,10 @@ class LTXProvider(VideoProvider):
                 payload["negative_prompt"] = request.context["negative_prompt"]
             if "seed" in request.context:
                 payload["seed"] = request.context["seed"]
+
+        logger.debug(
+            "[LTX] Payload audio fix: duration=%d audio_length=%d generate_audio=%s",
+            duration, duration, self._generate_audio
+        )
 
         return payload

@@ -1,0 +1,33 @@
+[
+  {
+    "status": "success",
+    "route_used": "ltx:ltx-2-3-fast",
+    "result": {
+      "output_path": "outputs/videos\\cli_20260506_164008__ltx_ltx-2-3-fast.mp4",
+      "model": "ltx-2-3-fast",
+      "duration": 12,
+      "resolution": "1920x1080",
+      "fps": 25,
+      "audio": true,
+      "file_size_bytes": 10128948
+    },
+    "prompt_id": "cli_20260506_164008",
+    "prompt_preview": "A cinematic 10-second promotional video for Informatics Engineering at ITS Surabaya. The video features a 20-year-old In...",
+    "request_payload": {
+      "instruction": "text_to_video",
+      "constraints": {
+        "duration": 12,
+        "ratio": "16:9",
+        "resolution": "1920x1080",
+        "fps": 25
+      },
+      "routing": {
+        "task_type": "text_to_video",
+        "fallback": "ltx:ltx-2-3-fast",
+        "resolved_provider": "ltx",
+        "resolved_model": "ltx-2-3-fast"
+      }
+    },
+    "created_at": "2026-05-06T16:40:43.692075+00:00"
+  }
+]

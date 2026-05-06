@@ -62,8 +62,8 @@ class GenerateRequest(BaseModel):
     duration: int = Field(
         default=10,
         ge=1,
-        le=30,
-        description="Durasi video dalam detik (1-30)",
+        le=12,
+        description="Durasi video dalam detik (1-12). Max 12s untuk kualitas audio native LTX.",
     )
     ratio: str = Field(
         default="16:9",

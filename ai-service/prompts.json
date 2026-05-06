@@ -2,7 +2,8 @@
   {
     "id": "its_informatics_01",
     "prompt": "A cinematic 10-second promotional video for Informatics Engineering at ITS Surabaya. The video features a 20-year-old Indonesian male student with a smart and friendly appearance, wearing a navy blue varsity jacket, smiling confidently at the camera. The scene starts in a modern, sunlit campus courtyard with tropical greenery, then transitions to a high-tech computer lab with glowing screens displaying complex AI code and 3D data visualizations. The final shot is a majestic drone view of the iconic ITS campus architecture during golden hour. The video includes high-quality native audio with a professional, enthusiastic male voiceover in Indonesian saying: Wujudkan masa depan digitalmu di Teknik Informatika ITS. Cerdas, Kreatif, Berprestasi!. Ambient tech sounds and upbeat corporate music play in the background. No subtitles or text on screen. Hyper-realistic, 4k, professional cinematography, cinematic lighting.",
-    "duration": 10,
-    "ratio": "16:9"
+    "duration": 12,
+    "ratio": "16:9",
+    "task_type": "text_to_video_hq"
   }
 ]
