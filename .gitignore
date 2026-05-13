@@ -35,3 +35,11 @@ docker-compose.override.yml
 
 # Misc
 coverage.out
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
