@@ -19,6 +19,7 @@ from typing import Dict, Optional
 from .base import VideoProvider, VideoRequest
 from .ltx_provider import LTXProvider
 from .runway_provider import RunwayProvider
+from .wavespeed_provider import WavespeedProvider
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,10 @@ ROUTING_TABLE: Dict[str, Dict[str, str]] = {
     "image_to_video": {
         "provider": "runway",
         "model": "gen4.5",
+    },
+    "wavespeed_veo": {
+        "provider": "wavespeed",
+        "model": "google/veo3.1-lite",
     },
 }
 
@@ -122,6 +127,15 @@ def build_provider(
             model=_model or "gen4.5",
         )
 
+    if _provider == "wavespeed":
+        api_key = os.getenv("WAVESPEED_API_KEY", "").strip()
+        if not api_key:
+            raise EnvironmentError("WAVESPEED_API_KEY tidak ditemukan di environment")
+        return WavespeedProvider(
+            api_key=api_key,
+            model=_model or "google/veo3.1-lite",
+        )
+
     raise ValueError(
-        f"Provider '{_provider}' tidak dikenali. Pilihan valid: ltx, runway"
+        f"Provider '{_provider}' tidak dikenali. Pilihan valid: ltx, runway, wavespeed"
     )

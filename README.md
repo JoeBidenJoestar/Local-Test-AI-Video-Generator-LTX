@@ -6,7 +6,8 @@
 ## Prerequisites
 
 - Python 3.10 or higher (`py --version` to check)
-- An LTX API key — get one at [ltx.video](https://ltx.video)
+- An LTX API key — get one at [ltx.video](https://ltx.video) (for LTX models)
+- A Wavespeed API key — available at Wavespeed dashboard (for Veo 3.1 model, optional)
 
 ---
 
@@ -30,13 +31,21 @@ ai-service/
 └── .env       ← create this file
 ```
 
+### For LTX Model (Default)
 Add the following content to `.env`:
 
 ```env
 LTX_API_KEY=your_actual_ltx_api_key_here
 ```
 
-Replace `your_actual_ltx_api_key_here` with your real key from the LTX dashboard.
+Replace `your_actual_ltx_api_key_here` with your real key from the [LTX dashboard](https://ltx.video).
+
+### For Wavespeed Model (Veo 3.1)
+If you want to use Wavespeed's Veo 3.1 model, add the following to `.env`:
+
+```env
+WAVESPEED_API_KEY=your_actual_wavespeed_api_key_here
+```
 
 > **Note:** The `.env` file is gitignored — your key will never be committed to the repository.
 
@@ -44,6 +53,7 @@ Replace `your_actual_ltx_api_key_here` with your real key from the LTX dashboard
 
 ```env
 LTX_API_KEY=your_actual_ltx_api_key_here
+WAVESPEED_API_KEY=your_actual_wavespeed_api_key_here
 
 # Output folder for generated videos (default: outputs/videos)
 VIDEO_OUTPUT_DIR=outputs/videos
@@ -86,7 +96,7 @@ py run_trial.py --prompt "A cinematic 10-second promotional video for Informatic
 | `--prompt` | `-p` | *(loads prompts.json)* | Any text | Video description to generate |
 | `--duration` | `-d` | `12` | `1` – `12` | Video length in seconds |
 | `--ratio` | `-r` | `16:9` | `16:9` `9:16` `1:1` `4:3` | Aspect ratio |
-| `--task-type` | `-t` | `text_to_video` | see below | Model selection (Fast vs Pro) |
+| `--task-type` | `-t` | `text_to_video` | `text_to_video`, `text_to_video_hq`, `wavespeed_veo`, `image_to_video` | Model selection |
 | `--id` | | auto | Any string | Custom video ID |
 | `--limit` | `-n` | `1` | Any number | Max scenes per run (`0` = all) |
 | `--prompts-file` | | `prompts.json` | File path | Batch prompt file |
@@ -95,10 +105,13 @@ py run_trial.py --prompt "A cinematic 10-second promotional video for Informatic
 
 ## Choosing a Model
 
-| `--task-type` | Model | Speed | Quality | Best for |
-|---|---|---|---|---|
-| `text_to_video` | `ltx-2-3-fast` | Fast | Good | Testing / drafts |
-| `text_to_video_hq` | `ltx-2-3-pro` | Slower | High | Final renders |
+| `--task-type` | Model | Provider | Speed | Quality | Best for |
+|---|---|---|---|---|---|
+| `text_to_video` | `ltx-2-3-fast` | LTX | Fast | Good | Testing / drafts |
+| `text_to_video_hq` | `ltx-2-3-pro` | LTX | Slower | High | Final renders |
+| `wavespeed_veo` | `google/veo3.1-lite` | Wavespeed | Moderate | High | Detailed, cinematic videos |
+
+### LTX Models
 
 **Fast (for testing):**
 ```cmd
@@ -108,6 +121,25 @@ py run_trial.py --prompt "..." --task-type text_to_video
 **Pro (for final output):**
 ```cmd
 py run_trial.py --prompt "..." --task-type text_to_video_hq
+```
+
+### Wavespeed Model (Veo 3.1)
+
+**Via task-type:**
+```cmd
+py run_trial.py --prompt "Your video description..." --task-type wavespeed_veo
+```
+
+**Or via environment variables (direct provider selection):**
+```cmd
+set ACTIVE_PROVIDER=wavespeed
+set ACTIVE_MODEL=google/veo3.1-lite
+py run_trial.py --prompt "Your video description..."
+```
+
+**Example (Wavespeed Veo 3.1):**
+```cmd
+py run_trial.py --prompt "A cinematic 10-second promotional video for Informatics Engineering at ITS Surabaya. The video features a 20-year-old Indonesian male student with a smart and friendly appearance, wearing a navy blue varsity jacket, smiling confidently at the camera. The scene starts in a modern, sunlit campus courtyard with tropical greenery, then transitions to a high-tech computer lab with glowing screens displaying complex AI code and 3D data visualizations. Professional cinematography, 4k, golden hour lighting." --duration 10 --task-type wavespeed_veo
 ```
 
 ---
@@ -132,6 +164,13 @@ You can define multiple prompts in `prompts.json` and run them in batch.
     "duration": 10,
     "ratio": "16:9",
     "task_type": "text_to_video"
+  },
+  {
+    "id": "scene_03_wavespeed",
+    "prompt": "A cinematic scene with detailed visuals...",
+    "duration": 8,
+    "ratio": "16:9",
+    "task_type": "wavespeed_veo"
   }
 ]
 ```
@@ -198,10 +237,16 @@ ai-service/outputs/reports/trial_report_{timestamp}.json
 
 ## Audio Notes
 
-- **ltx-2-3-fast** and **ltx-2-3-pro** both support native audio generation.
+### LTX Models (ltx-2-3-fast, ltx-2-3-pro)
+- Both support native audio generation.
 - Audio is enabled by default (`generate_audio: true`).
 - The `audio_length` parameter is always set equal to `duration` to prevent audio cutoff.
 - Maximum duration is **12 seconds** to ensure full audio coverage.
+
+### Wavespeed Model (Veo 3.1)
+- Audio generation is handled by Wavespeed API.
+- Audio is typically generated as part of the video response.
+- Maximum duration supported: **12 seconds**.
 
 ---
 
@@ -212,7 +257,9 @@ ai-service/outputs/reports/trial_report_{timestamp}.json
 | `'python' is not recognized` | Python not on PATH | Use `py` instead of `python` |
 | `ModuleNotFoundError: No module named 'dotenv'` | Dependencies not installed | Run `py -m pip install -r requirements.txt` |
 | `LTX_API_KEY tidak ditemukan` | Missing `.env` file or empty key | Create `.env` with your API key |
-| `API returned error 401` | Invalid API key | Check your key at [ltx.video](https://ltx.video) |
+| `WAVESPEED_API_KEY tidak ditemukan` | Missing Wavespeed key in `.env` | Add `WAVESPEED_API_KEY=your_key` to `.env` |
+| `API returned error 401` | Invalid API key | Check your key at [ltx.video](https://ltx.video) or Wavespeed dashboard |
+| `Provider 'wavespeed' tidak dikenali` | Using old version of router.py | Update code to latest version |
 | `No such file or directory: run_trial.py` | Wrong working directory | `cd` into the `ai-service` folder first |
 | Audio cuts off before video ends | Missing `audio_length` in payload | Already fixed — update to latest code |
 
@@ -229,6 +276,8 @@ ai-service/
 ├── requirements.txt        ← Python dependencies
 ├── providers/
 │   ├── ltx_provider.py     ← LTX API integration
+│   ├── wavespeed_provider.py ← Wavespeed API integration (Veo 3.1)
+│   ├── runway_provider.py  ← Runway API integration
 │   ├── router.py           ← Task-type to model routing
 │   └── http_client.py      ← HTTP session with retry logic
 ├── services/
